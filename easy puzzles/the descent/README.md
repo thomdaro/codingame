@@ -63,7 +63,7 @@ Every test case has a name, and that name is used to identify an input and outpu
 The above examples are from the test case "Scattered Mountains", so the corresponding files are ```test_cases/scattered.csv``` and ```expected_output/scattered.csv```.
 These files are processed and converted to lists of integers for use in the program.
 
-#### ASCII Display
+#### Console Display
 
 The ASCII display box follows some basic rules for drawing the game board.
 There are six distinct characters used to draw the board.
@@ -88,4 +88,17 @@ The initial game board for ```scattered``` looks like this:<br>
     - - - - - - - - - -
     
 When a mountain is zapped, it is drawn at the height it will have in the next round immediately following the zap, to mimic the original look of the Codingame implementation as closely as possible.
-Currently, this ASCII display prints to the console each time the display updates, but I intend to implement a static version with ```curses``` or a similar package.
+
+#### Terminal Display
+
+Using ```curses```, I've implemented a static display which draws to the terminal rather than printing each frame in the console.
+The result is considerably cleaner, and requres only a few lines of code added to my initial console display.
+Because the console display constructs a game board as a string, this string can be statically printed in the terminal with minimal changes.
+
+#### Graphical Display
+
+```pygame``` is used to generate the graphical display of each test case. 
+There are five 40x40 images used: the spaceship, empty space, a mountain tile, the laser, and the start of the laser, placed directly under the ship to look more natural than a massive block of color.
+Currently, this display code is shoved inside of the console/terminal display code, but I intend to place it in a separate method.
+The other display modes rely on constructing a string from scratch because strings are immutable, but a pygame surface can be modified with considerably more freedom. 
+A more efficient method of drawing this graphical representation will come in future commits.
