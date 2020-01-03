@@ -1,3 +1,5 @@
+import sys
+import keyboard
 import time
 import curses
 import pygame
@@ -5,24 +7,20 @@ import pygame
 TEST_CASE_NAMES = ['descending', 'scattered', 'strong_1', 'strong_2', 'one']
 BOARD_WIDTH = 8
 BOARD_HEIGHT = 10
-WINDOW_SIZE = 400
-GAME_SPEED = 0.05
-DISPLAY_MODE = ["console", "terminal", "graphical"][2]
-SCREEN = curses.initscr() if DISPLAY_MODE == "terminal" else None
-if DISPLAY_MODE == "graphical":
-    pygame.init()
-    DISPLAY_SURFACE = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
-    SHIP_IMG = pygame.image.load('../images/spaceship.png')
-    SPACE_IMG = pygame.image.load('../images/space.png')
-    MOUNTAIN_IMG = pygame.image.load('../images/mountain.png')
-    LASER_TIP_IMG = pygame.image.load('../images/laser_tip.png')
-    LASER_IMG = pygame.image.load('../images/laser.png')
+WINDOW_WIDTH = 320
+WINDOW_HEIGHT = 400
+IMAGE_SIZE = 40
+GAME_SPEED = 0.1
 
 
-# [string] filename: corresponds to the name of a test case input file, located in ../test_cases/.
-def process_input(filename):
+def process_input(file_name):
+    """
+    :param file_name: name of the file to be processed
+    :type file_name: str
+    """
+
     res = []
-    raw_file = open('../test_cases/' + filename + '.csv', 'r')
+    raw_file = open('../test_cases/' + file_name + '.csv', 'r')
 
     for line in raw_file:
         res.append(list(map(int, line.rstrip().split(','))))
@@ -30,126 +28,200 @@ def process_input(filename):
     return res
 
 
-# [string] filename: corresponds to the name of a test case expected output file, located in ../expected_output/.
-def process_output(filename):
-    raw_file = open('../expected_output/' + filename + '.csv', 'r')
+def process_output(file_name):
+    """
+    :param file_name: name of the file to be processed
+    :type file_name: str
+    """
+    raw_file = open('../expected_output/' + file_name + '.csv', 'r')
     res = list(map(int, raw_file.readline().rstrip().split(',')))
     raw_file.close()
     return res
 
 
-# [list(int)] round_input: the heights of mountains in this current game round.
-# [list(int)] next_round_input: the heights of mountains in the next game round.
-# [int] p_height: the current height of the player. Reduced by 1 each game round.
-# [int] tall_index: the index of the player-selected mountain. Determines where to draw laser.
-# [string] file_name: used to display the name of the current test case.
-def display(round_input, next_round_input, p_height, tall_index, file_name):
-    disp = []
+def display(round_input, next_round_input, ship_row, tall_index):
+    """
+    :param round_input: heights of mountains in the current game round
+    :type round_input: list[int]
+    :param next_round_input: heights of mountains in the next game round
+    :type next_round_input: list[int]
+    :param ship_row: row the ship is drawn in
+    :type ship_row: int
+    :param tall_index: index of the selected mountain
+    :type tall_index: int
+    """
+
+    disp_list = []
     for x in round_input:
         mountain = []
         for _ in range(x):
             mountain.append("X")
         for _ in range(BOARD_HEIGHT - x):
             mountain.append(".")
-        disp.append(mountain)
+        disp_list.append(mountain)
 
     # credit to paldepind on SO for providing this one-liner to rotate a 2D matrix
     # (link: https://stackoverflow.com/questions/8421337/rotating-a-two-dimensional-array-in-python)
     for _ in range(3):
-        disp = list(zip(*disp[::-1]))
+        disp_list = list(zip(*disp_list[::-1]))
 
     for x in range(BOARD_WIDTH):
-        p_horiz = x if p_height % 2 == 0 else 7 - x
-        flag = p_horiz > tall_index if p_height % 2 == 0 else p_horiz < tall_index
+        SCREEN.move(1, 0)
+        move = x if ship_row % 2 == 0 else 7 - x
+        flag = move > tall_index if ship_row % 2 == 0 else move < tall_index
 
-        if DISPLAY_MODE == "console":
-            print("test case: " + file_name + "\n")
-        elif DISPLAY_MODE == "terminal":
-            SCREEN.addstr("test case: " + file_name + "\n")
-        elif DISPLAY_MODE == "graphical":
-            pygame.display.set_caption("test case: " + file_name)
-
-        res = "- " * (BOARD_WIDTH + 2) + "\n"
+        SCREEN.addstr("- " * (BOARD_WIDTH + 2) + "\n")
         for drawing_row in range(BOARD_HEIGHT):
-            res += "| "
-            if DISPLAY_MODE == "graphical":
-                DISPLAY_SURFACE.blit(SPACE_IMG, (0, 40 * drawing_row))
+            SCREEN.addstr("| ")
             for drawing_col in range(BOARD_WIDTH):
-                drawing_pos = (40 * drawing_col + 40, 40 * drawing_row)
-                if drawing_row > BOARD_HEIGHT - p_height and drawing_col == tall_index and p_horiz == tall_index:
-                    res += "V "
-                    if DISPLAY_MODE == "graphical":
-                        if drawing_row == BOARD_HEIGHT - p_height + 1:
-                            DISPLAY_SURFACE.blit(LASER_TIP_IMG, drawing_pos)
-                        else:
-                            DISPLAY_SURFACE.blit(LASER_IMG, drawing_pos)
-                elif drawing_col == p_horiz and drawing_row == BOARD_HEIGHT - p_height:
-                    if DISPLAY_MODE == "graphical":
-                        DISPLAY_SURFACE.blit(SHIP_IMG, drawing_pos)
-                    else:
-                        res += "o "
+                if drawing_row > BOARD_HEIGHT - ship_row and drawing_col == tall_index and move == tall_index:
+                    SCREEN.addstr("V ")
+                elif drawing_col == move and drawing_row == BOARD_HEIGHT - ship_row:
+                    SCREEN.addstr("o ")
                 else:
                     if flag and drawing_col == tall_index:
                         if drawing_row <= (BOARD_HEIGHT - 1) - next_round_input[tall_index]:
-                            if DISPLAY_MODE == "graphical":
-                                DISPLAY_SURFACE.blit(SPACE_IMG, drawing_pos)
-                            else:
-                                res += ". "
+                            SCREEN.addstr(". ")
                         else:
-                            if DISPLAY_MODE == "graphical":
-                                DISPLAY_SURFACE.blit(MOUNTAIN_IMG, drawing_pos)
-                            else:
-                                res += "X "
+                            SCREEN.addstr("X ")
                     else:
-                        char = disp[drawing_row][drawing_col]
-                        if DISPLAY_MODE == "graphical":
-                            if char == ".":
-                                DISPLAY_SURFACE.blit(SPACE_IMG, drawing_pos)
-                            elif char == "X":
-                                DISPLAY_SURFACE.blit(MOUNTAIN_IMG, drawing_pos)
-                        res += char + " "
-            res += "|\n"
-            if DISPLAY_MODE == "graphical":
-                DISPLAY_SURFACE.blit(SPACE_IMG, (WINDOW_SIZE - 40, 40 * drawing_row))
-        res += "- " * (BOARD_WIDTH + 2) + "\n"
-        if DISPLAY_MODE == "console":
-            print(res + "\n")
-        elif DISPLAY_MODE == "terminal":
-            SCREEN.addstr(0, 0, res)
-            SCREEN.refresh()
-        elif DISPLAY_MODE == "graphical":
-            pygame.display.update()
+                        SCREEN.addstr(disp_list[drawing_row][drawing_col] + " ")
+            SCREEN.addstr("|\n")
+        SCREEN.addstr("- " * (BOARD_WIDTH + 2) + "\n")
+        SCREEN.refresh()
+
         if max(next_round_input) == 0 and flag:
-            if DISPLAY_MODE == "console":
-                print("All mountains destroyed, clear for landing.")
-            elif DISPLAY_MODE == "terminal":
-                SCREEN.addstr("All mountains destroyed, clear for landing.", curses.A_STANDOUT)
-                SCREEN.refresh()
-            elif DISPLAY_MODE == "graphical":
-                pygame.display.set_caption("All mountains destroyed, clear for landing.")
-                pygame.display.update()
+            SCREEN.move(BOARD_HEIGHT + 3, 0)
+            SCREEN.addstr("All mountains destroyed, clear for landing.")
+            SCREEN.refresh()
             time.sleep(2)
-            SCREEN.clear() if DISPLAY_MODE == "terminal" else None
+            SCREEN.clear()
             break
+
         time.sleep(GAME_SPEED)
 
 
-# [list(list(int))] case_in: the processed input for the current test case
-# [list(int)] case_out: the processed output for the current test case
+def graphical_display(round_input, next_round_input, ship_row, tall_index):
+    """
+    :param round_input: heights of mountains in the current game round
+    :type round_input: list[int]
+    :param next_round_input: heights of mountains in the next game round
+    :type next_round_input: list[int]
+    :param ship_row: row the ship is drawn in
+    :type ship_row: int
+    :param tall_index: index of the selected mountain
+    :type tall_index: int
+    :return: None
+    """
+
+    for display_row in range(BOARD_HEIGHT):
+        for display_col in range(BOARD_WIDTH+2):
+            DISPLAY_SURFACE.blit(SPACE_IMG, (display_col * IMAGE_SIZE, display_row * IMAGE_SIZE))
+    ship_x = 0 if ship_row % 2 == 0 else WINDOW_WIDTH - IMAGE_SIZE
+    ship_pos = [ship_x, IMAGE_SIZE * ship_row]
+    DISPLAY_SURFACE.blit(SHIP_IMG, ship_pos)
+
+    for i in range(len(round_input)):
+        height = round_input[i]
+        for tile in range(1, height + 1):
+            DISPLAY_SURFACE.blit(MOUNTAIN_IMG, (i * IMAGE_SIZE, WINDOW_HEIGHT - tile * IMAGE_SIZE))
+
+    check_event()
+    pygame.display.update()
+    time.sleep(GAME_SPEED)
+
+    for move in range(1, BOARD_WIDTH):
+
+        if ship_row % 2 != 0:
+            move = BOARD_WIDTH - 1 - move
+        flag = move > tall_index if ship_row % 2 == 0 else move < tall_index
+
+        DISPLAY_SURFACE.blit(SPACE_IMG, ship_pos)
+        ship_pos[0] += (40 if ship_row % 2 == 0 else -40)
+        DISPLAY_SURFACE.blit(SHIP_IMG, ship_pos)
+
+        if move == tall_index:
+            DISPLAY_SURFACE.blit(LASER_TIP_IMG, (ship_pos[0], (ship_row + 1) * IMAGE_SIZE))
+            for down in range(2, BOARD_HEIGHT - ship_row):
+                DISPLAY_SURFACE.blit(LASER_IMG, (ship_pos[0], (ship_row + down) * IMAGE_SIZE))
+        elif flag:
+            for tile in range(next_round_input[tall_index], BOARD_HEIGHT - ship_row):
+                DISPLAY_SURFACE.blit(SPACE_IMG, (tall_index * IMAGE_SIZE, (BOARD_HEIGHT - tile) * IMAGE_SIZE))
+            for tile in range(next_round_input[tall_index]):
+                DISPLAY_SURFACE.blit(MOUNTAIN_IMG, (tall_index * IMAGE_SIZE, (BOARD_HEIGHT - tile - 1) * IMAGE_SIZE))
+            if max(next_round_input) == 0:
+                pygame.display.update()
+                pygame.display.set_caption("All mountains destroyed.")
+                for _ in range(200):
+                    pygame.time.wait(5)
+                    check_event()
+                break
+
+        check_event()
+        pygame.display.update()
+        time.sleep(GAME_SPEED)
+
+
+def check_event():
+    if pygame.event.poll().type == pygame.QUIT:
+        pygame.quit()
+        sys.exit()
+
+
 def main(case_in, case_out, case_name):
+    """
+    :param case_in: processed input for the current test case
+    :type case_in: list[list[int]]
+    :param case_out: processed output for the current test case
+    :type case_out: list[int]
+    :param case_name: name of the current test case
+    :type case_name: str
+    :return: None
+    """
     res = []
     player_height = BOARD_HEIGHT
 
     for i in range(len(case_in)-1):
+
         heights = case_in[i]
         tallest = heights.index(max(heights))
         res.append(tallest)
-        display(case_in[i], case_in[i + 1], player_height, tallest, case_name)
+
+        if res != case_out[:i+1]:
+            break
+
+        if DISPLAY_MODE == "terminal":
+            SCREEN.addstr(0, 0, "test case: " + case_name + "\n")
+            display(case_in[i], case_in[i + 1], player_height, tallest)
+        elif DISPLAY_MODE == "graphical":
+            pygame.display.set_caption("test case: " + case_name)
+            graphical_display(case_in[i], case_in[i+1], i, tallest)
         heights.clear()
         player_height -= 1
 
 
 if __name__ == '__main__':
+
+    print("Press t for terminal display, g for graphical display.")
+    while True:
+        if keyboard.is_pressed('t'):
+            keyboard.press('\b')
+            SCREEN = curses.initscr()
+            DISPLAY_MODE = "terminal"
+            break
+        elif keyboard.is_pressed('g'):
+            keyboard.press('\b')
+            pygame.init()
+            DISPLAY_SURFACE = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+            pygame.event.set_allowed(pygame.ACTIVEEVENT)
+            pygame.event.set_allowed(pygame.QUIT)
+            SHIP_IMG = pygame.image.load('../images/spaceship.png')
+            SPACE_IMG = pygame.image.load('../images/space.png')
+            MOUNTAIN_IMG = pygame.image.load('../images/mountain.png')
+            LASER_TIP_IMG = pygame.image.load('../images/laser_tip.png')
+            LASER_IMG = pygame.image.load('../images/laser.png')
+            DISPLAY_MODE = "graphical"
+            break
 
     for name in TEST_CASE_NAMES:
         case_input = process_input(name)
