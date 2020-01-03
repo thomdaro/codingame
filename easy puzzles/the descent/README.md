@@ -99,6 +99,7 @@ Because the console display constructs a game board as a string, this string can
 
 ```pygame``` is used to generate the graphical display of each test case. 
 There are five 40x40 images used: the spaceship, empty space, a mountain tile, the laser, and the start of the laser, placed directly under the ship to look more natural than a massive block of color.
-Currently, this display code is shoved inside of the console/terminal display code, but I intend to place it in a separate method.
 The other display modes rely on constructing a string from scratch because strings are immutable, but a pygame surface can be modified with considerably more freedom. 
-A more efficient method of drawing this graphical representation will come in future commits.
+The code only draws as many images as necessary for a game round, to avoid redrawing the entire screen one tile at a time every frame.
+The graphical representation looks something like this:<br><br>
+![Example image](images/test.PNG)
