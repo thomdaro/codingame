@@ -14,6 +14,6 @@ This is a lot to keep track of, but this initial puzzle is simplified considerab
 
 ### Example Case and Explanation
 
-image TBD
+![Example Case](images/lander.PNG)
 
 Essentially, all we have to do to land the rover is wait until we're falling at our maximum allowed landing speed, crank up the thrust to maximum, and slowly kill our vertical speed, landing on the safe zone going roughly 30 m/s.
