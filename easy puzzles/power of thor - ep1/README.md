@@ -19,17 +19,25 @@ along with a couple others to demonstrate.
 
 ### Example Test Cases
 
+In all cases, Thor starts on the black dot and ends on the red dot. The blue line is the path taken between the two.
+
 **Straight Line**
 
-TBD
+![](images/thor_straight.png)
+
+This one is straightforward (pun intended.) Thor moves directly easy for 26 turns. 
 
 **Easy Angle**
 
-TBD
+![](images/thor_easy.png)
+
+This one is interesting in that "angle" is a misnomer here. The path shown here is optimal, but the test case input allows Thor to make enough moves that he could technically go straight down, then straight over, and still make it on time.
 
 **Optimal Angle** 
 
-TBD
+![](images/thor_optimal.png)
+
+This test case requires optimal movement. Thor moves on a diagonal to cover as much distance as possible, then moves horizontally to cover the remaining distance. 
 
 ### Original Codingame Problem
 
