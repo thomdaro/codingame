@@ -15,7 +15,7 @@ A typical test case input looks like this:
 
 Distance between the user's position and each defibrillator can be calculated using this formula.
 
-![Needed Formulas](defibrillators/images/defib_dist.PNG)
+![Needed Formulas](images/defib_dist.PNG)
 
 Note, however, that these formulas assume the latitude and longitude are in radians, so we have to convert our data from degrees. Once we find the closest defibrillator, we simply print out its name to finish the test case.
 
