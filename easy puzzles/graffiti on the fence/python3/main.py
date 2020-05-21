@@ -15,20 +15,17 @@ reports.sort(key = lambda x: x[0])
 # intersection of all painted sections (i.e. no overlap)
 cons = [reports[0].copy()]
 
-# curr keeps track of which record in cons to modify
-curr = 0
 # skip first record since this one is already in cons
 for i in range(1, n):
-    curr_ed = cons[curr][1]
+    curr_ed = cons[-1][1]
     # if the start of the current record is behind the consolidated end
     if reports[i][0] <= curr_ed:
         # change the end of cons[curr] to the furthest endpoint
-        cons[curr][1] = max(curr_ed, reports[i][1])
+        cons[-1][1] = max(curr_ed, reports[i][1])
     # if we have no overlap
     else:
         # start consolidating a new record
         cons.append(reports[i])
-        curr += 1
     
 # add an unpainted section from the start to the first painted section if needed
 first_st = cons[0][0]
