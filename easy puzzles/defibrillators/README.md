@@ -30,6 +30,6 @@ An example test case input is as follows:
     
 To clean up the longitude and latitude from this input, we replace the commas with dots, convert the strings to floats and run them through `math.radians`. From here, it's a simple matter of hardcoding the above formulas and comparing the resulting distances, then printing out the name of the closest defibrillator, in this case `Maison de la Prevention Sante`.
 
-### Original Codigame Problem
+### Original Codingame Problem
 
 https://www.codingame.com/training/easy/defibrillators
