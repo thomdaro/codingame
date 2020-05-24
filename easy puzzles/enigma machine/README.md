@@ -93,3 +93,5 @@ This structure iterates over the rotors in order, mapping each character to its 
 Decoding is a similar process. We iterate over the rotors in reverse order, then Caeser-shift the un-rotated message backwards.
 
 ### Original Codingame Problem
+
+https://www.codingame.com/training/easy/encryptiondecryption-of-enigma-machine
