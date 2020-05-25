@@ -138,7 +138,6 @@ for i in range(height):
             maze[i][j] = "0"
 
 starting_pos = pos
-starting_dirn = dirn
 pos, dirn = step(pos, dirn)
 
 while pos != starting_pos:
