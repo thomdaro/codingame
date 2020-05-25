@@ -60,4 +60,60 @@ For each direction, we perform a check to see if there an open space in that dir
             
 We have identical checks for south, west and north as well.   
 
-`step()` is the meat of this program.
+`step()` is the meat of this program. Whenever we move in the maze, there are two major factors that affect the order of spaces we check: our current direction, and which wall we are meant to be following. Depending on those two factors, we check each space in a certain order. If one of the combinations of spaces returns a valid new position, we return it as our next move.
+
+    if (dirn == "E" and side == "R") or (dirn == "W" and side == "L"):
+        pos, dirn = check_south(pos)
+        if dirn == "":
+            if side == "R":
+                pos, dirn = check_east(pos)
+            elif side == "L":
+                pos, dirn = check_west(pos)
+        if dirn == "":
+            pos, dirn = check_north(pos)
+        if dirn == "":
+            if side == "R":
+                pos, dirn = check_west(pos)
+            elif side == "L":
+                pos, dirn = check_east(pos)
+        return pos, dirn
+
+The above block trips if we are moving east following the right wall, or moving west following the left wall. There are three other structurally identical blocks which check all six other movement combinations in pairs.
+
+We find the starting character of the maze and use it to set our starting direction.
+
+    for i in range(height):
+        for j in range(width):
+
+            curr = maze[i][j]
+
+            if curr in "><^v":
+                pos = (i, j)
+                if curr == ">":
+                    dirn = "E"
+                elif curr == "<":
+                    dirn = "W"
+                elif curr == "^":
+                    dirn = "N"
+                elif curr == "v":
+                    dirn = "S"
+                maze[i][j] = "0"
+
+We store the starting position so that we know when to break our loop, then take one step forward so that we don't trigger the break condition immediately.
+ 
+    starting_pos = pos
+    pos, dirn = step(pos, dirn)
+
+    while pos != starting_pos:
+        pos, dirn = step(pos, dirn)
+
+When we reach the starting point again, the traversal is finished. We print the updated maze to reflect the results of the traversal.
+
+    for line in maze:
+        for char in line:
+            print(char, end="")
+        print("")                
+        
+### Original Codingame Problem
+
+https://www.codingame.com/training/easy/detective-pikaptcha-ep2
